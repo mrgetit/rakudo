@@ -8,6 +8,17 @@ This is the base file for the Rakudo Perl 6 compiler.
 
 =cut
 
+.HLL 'Perl6'
+
+.sub '' :load :init :anon
+    load_bytecode 'PCT.pbc'
+    .local pmc hllns, parrotns, exports
+    hllns = get_hll_namespace
+    parrotns = get_root_namespace ['parrot']
+    exports = split ' ', 'PGE PCT'
+.end
+
+
 .loadlib 'perl6_group'
 .loadlib 'perl6_ops'
 .include 'src/pctextensions/state.pir'
@@ -26,8 +37,6 @@ Creates the Perl 6 compiler by subclassing a C<PCT::HLLCompiler> object.
 .namespace [ 'Perl6';'Compiler' ]
 
 .sub 'onload' :load :init :anon
-    load_bytecode 'PCT.pbc'
-
     .local pmc p6meta, perl6
     p6meta = get_hll_global ['Perl6Object'], '$!P6META'
     perl6 = p6meta.'new_class'('Perl6::Compiler', 'parent'=>'PCT::HLLCompiler')

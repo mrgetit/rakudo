@@ -20,6 +20,7 @@ Tests role membership.
 
 =cut
 
+.HLL 'parrot'
 .namespace ['P6metaclass']
 .sub 'does' :method
     .param pmc obj
@@ -237,6 +238,8 @@ Creates whatever closures (*.foo => { $_.foo })
 =back
 
 =cut
+
+.HLL 'Perl6'
 
 # Local Variables:
 #   mode: pir

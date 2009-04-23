@@ -13,6 +13,8 @@ XXX TODO: Doesn't yet handle binding beyond the initial one.
 
 =cut
 
+.HLL 'parrot'
+
 .include "interpinfo.pasm"
 .namespace [ 'PAST';'Compiler' ]
 .sub 'state' :method :multi(_, ['PAST';'Var'])
@@ -77,3 +79,5 @@ XXX TODO: Doesn't yet handle binding beyond the initial one.
   lexical_bind_decl:
     .tailcall $P0.'new'(name, bindpost, 'pirop'=>'.lex', 'result'=>bindpost)
 .end
+
+.HLL 'Perl6'

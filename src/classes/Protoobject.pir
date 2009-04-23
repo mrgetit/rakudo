@@ -14,6 +14,8 @@ Protoobject - methods on Protoobjects
 
 =cut
 
+.HLL 'parrot'
+
 .namespace ['P6protoobject']
 .sub 'defined' :method
     $P0 = get_hll_global ['Bool'], 'False'
@@ -165,6 +167,8 @@ Indicate that objects in the class are mutable or immutable.
     $N0 = $P0
     .return ($N0)
 .end
+
+.HLL 'Perl6'
 
 # Local Variables:
 #   mode: pir
