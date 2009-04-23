@@ -142,6 +142,7 @@ Note that we currently do this by adding the method to Parrot's
 
 =cut
 
+.HLL 'parrot'
 .namespace ['Sub']
 .sub 'count' :method
     $P0 = inspect self, "pos_required"
@@ -149,6 +150,8 @@ Note that we currently do this by adding the method to Parrot's
     add $P0, $P1
     .return ($P0)
 .end
+
+.HLL 'Perl6'
 
 
 =item perl()

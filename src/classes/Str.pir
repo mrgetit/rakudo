@@ -30,6 +30,7 @@ as the Perl 6 C<Str> class.
 .end
 
 
+.HLL 'parrot'
 ## special method to cast Parrot String into Rakudo Str.
 .namespace ['String']
 .sub 'Scalar' :method
@@ -39,6 +40,7 @@ as the Perl 6 C<Str> class.
     .return (self)
 .end
 
+.HLL 'Perl6'
 
 .namespace ['Str']
 .sub 'ACCEPTS' :method
