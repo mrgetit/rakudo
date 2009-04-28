@@ -15,7 +15,7 @@ This is the base file for the Rakudo Perl 6 compiler.
     .local pmc hllns, parrotns, exports
     hllns = get_hll_namespace
     parrotns = get_root_namespace ['parrot']
-    exports = split ' ', 'PGE PCT'
+    exports = split ' ', 'PAST PGE PCT'
     parrotns.'export_to'(hllns, exports)
 .end
 
