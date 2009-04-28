@@ -510,16 +510,19 @@ is composed (see C<!meta_compose> below).
     metarole = get_class ns
     unless null metarole goto have_role
 
-    info = new 'Hash'
+    info = get_root_global ['parrot'], 'Hash'
+    info = new info
     $P0 = nsarray[-1]
     info['name'] = $P0
     info['namespace'] = nsarray
-    metarole = new 'Role', info
+    metarole = get_root_global ['parrot'], 'Role'
+    metarole = new metarole, info
   have_role:
 
     # Copy list of roles done by the metarole.
     .local pmc result, tmp, it
-    result = new 'Role'
+    result = get_root_global ['parrot'], 'Role'
+    result = new result
     setprop result, '$!orig_role', metarole
     tmp = metarole.'roles'()
     it = iter tmp
@@ -758,7 +761,8 @@ and C<type>.
     class_handles_list = new 'ResizablePMCArray'
     setprop metaclass, '@!handles_dispatchers', class_handles_list
   have_class_handles_list:
-    handles_hash = new 'Hash'
+    handles_hash = get_root_global ['parrot'], 'Hash'
+    handles_hash = new handles_hash
     handles_hash['attrname'] = name
     handles_hash['match_against'] = $P0
     push class_handles_list, handles_hash
@@ -1206,10 +1210,12 @@ Internal helper method to create a role.
     .local pmc ns
     ns = split '::', name
     name = ns[-1]
-    info = new 'Hash'
+    info = get_root_global ['parrot'], 'Hash'
+    info = new info
     info['name'] = name
     info['namespace'] = ns
-    role = new 'Role', info
+    role = get_root_global ['parrot'], 'Role'
+    role = new role, info
 
     # Now we need to wrap it up as a Perl6Role.
     helper = find_name '!keyword_role_helper'
@@ -1376,7 +1382,8 @@ Loads any existing values of state variables for a block.
     $P0 = $P0['sub'; 1]
     state_store = getprop '$!state_store', $P0
     unless null state_store goto have_state_store
-    state_store = new 'Hash'
+    state_store = get_root_global ['parrot'], 'Hash'
+    state_store = new state_store
     setprop $P0, '$!state_store', state_store
   have_state_store:
 

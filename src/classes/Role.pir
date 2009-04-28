@@ -107,7 +107,8 @@ Selects a variant of the role to do based upon the supplied parameters.
     .local pmc selector
     selector = getattribute self, '$!selector'
     result = selector(pos_args :flat, name_args :flat :named)
-    ins_hash = new 'Hash'
+    ins_hash = get_root_global ['parrot'], 'Hash'
+    ins_hash = new ins_hash
     ins_hash["pos_args"] = pos_args
     ins_hash["role"] = result
     push created_list, ins_hash

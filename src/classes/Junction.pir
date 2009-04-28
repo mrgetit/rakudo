@@ -371,7 +371,8 @@ parameters for the dispatcher.
     # dispatcher.
     .local pmc pos_args, name_args, it, param
     pos_args = new ['ResizablePMCArray']
-    name_args = new ['Hash']
+    name_args = get_root_global ['parrot'], 'Hash'
+    name_args = new name_args
     $P0 = signature.'params'()
     it = iter $P0
   param_loop:

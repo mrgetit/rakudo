@@ -183,7 +183,8 @@
     optww = options['ww']
     unless optww goto have_wwopts
     .local pmc wwsingleopts, wwdoubleopts
-    wwsingleopts = new 'Hash'
+    wwsingleopts = get_root_global ['parrot'], 'Hash'
+    wwsingleopts = new wwsingleopts
     wwsingleopts['q'] = 1
     wwsingleopts['stop'] = "'"
     wwsingleopts['action'] = action
@@ -191,7 +192,8 @@
     ##  handle null entries (and does a deepcopy), so we're
     ##  using an iterator to do it.
     ##  wwdoubleopts = clone options
-            wwdoubleopts = new 'Hash'
+            wwdoubleopts = get_root_global ['parrot'], 'Hash'
+            wwdoubleopts = new wwdoubleopts
             .local pmc it2
             it2 = iter options
           iter2_loop:
