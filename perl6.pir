@@ -45,8 +45,10 @@ Creates the Perl 6 compiler by subclassing a C<PCT::HLLCompiler> object.
     load_bytecode 'config.pbc'
 
     perl6.'language'('Perl6')
-    perl6.'parsegrammar'('Perl6::Grammar')
-    perl6.'parseactions'('Perl6::Grammar::Actions')
+    $P0 = get_hll_namespace ['Perl6';'Grammar']
+    perl6.'parsegrammar'($P0)
+    $P0 = get_hll_namespace ['Perl6';'Grammar';'Actions']
+    perl6.'parseactions'($P0)
 
     ##  set the compilation stages in the @stages attribute
     $P0 = split ' ', 'parse past check_syntax post pir evalpmc'
