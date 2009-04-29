@@ -209,6 +209,7 @@ method repeat_statement($/) {
     my $cond  := $<EXPR>.ast;
     my $block := $<block>.ast;
     $block.blocktype('immediate');
+    declare_implicit_block_vars($block, 0);
     # pasttype is 'repeat_while' or 'repeat_until'
     my $pasttype := 'repeat_' ~ ~$<loop>;
     make PAST::Op.new( $cond, $block, :pasttype($pasttype), :node($/) );
@@ -226,6 +227,7 @@ method given_statement($/) {
 method when_statement($/) {
     my $block := $<block>.ast;
     $block.blocktype('immediate');
+    declare_implicit_block_vars($block, 0);
 
     # Push a handler onto the innermost block so that we can exit if we
     # successfully match
@@ -251,6 +253,7 @@ method default_statement($/) {
     # Always executed if reached, so just produce the block.
     my $block := $<block>.ast;
     $block.blocktype('immediate');
+    declare_implicit_block_vars($block, 0);
 
     # Push a handler onto the innermost block so that we can exit if we
     # successfully match
@@ -314,6 +317,7 @@ sub when_handler_helper($block) {
 method loop_statement($/) {
     my $block := $<block>.ast;
     $block.blocktype('immediate');
+    declare_implicit_block_vars($block, 0);
     my $cond  := $<e2> ?? $<e2>[0].ast !! 1;
     my $loop := PAST::Op.new( $cond, $block, :pasttype('while'), :node($/) );
     if $<e3> {
@@ -1658,6 +1662,7 @@ method package_def($/, $key) {
 
     my $block := $/{$key}.ast;
     $block.lexical(0);
+    declare_implicit_routine_vars($block);
 
     my $modulename;
     my $is_anon := 0;
@@ -1909,7 +1914,7 @@ method scope_declarator($/) {
                 else {
                     # $scope eq 'package' | 'lexical' | 'state'
                     my $viviself := PAST::Op.new( :pirop('new PsP'), $var<itype> );
-                    if $init_value { $viviself.push( $init_value ); }
+                    if $init_value        { $viviself.push( $init_value ); }
                     $var.viviself( $viviself );
                     if $var<traitlist> {
                         for @($var<traitlist>) {
@@ -1924,24 +1929,26 @@ method scope_declarator($/) {
                         }
                     }
                     if $type {
-                        if $var<sigil> eq '$' {
-                            $var := PAST::Op.new(
-                                :pasttype('call'),
-                                :name('!var_trait_verb_of'),
-                                $var, $type
-                            );
+                        if $var<sigil> ne '$' && $var<sigil> ne '@' && $var<sigil> ne '%' && $var<sigil> ne '' {
+                            $/.panic("Cannot handle typed variables with sigil " ~ $var<sigil>);
                         }
-                        else {
-                            if $var<sigil> ne '@' && $var<sigil> ne '%' && $var<sigil> ne '' {
-                                $/.panic("Cannot handle typed variables with sigil " ~ $var<sigil>);
-                            }
-                            $var := PAST::Op.new(
-                                :pasttype('call'),
-                                :name('!var_trait_verb_of'),
-                                $var,
-                                $type
-                            );
-                        }
+                        $var := PAST::Op.new(
+                            :pasttype('call'),
+                            :name('!var_trait_verb_of'),
+                            $var, $type
+                        );
+                    }
+                    if $sym eq 'constant' {
+                        # Do init in viviself, and then make sure we mark it readonly after
+                        # that point.
+                        $var := PAST::Op.new(
+                            :pasttype('call'),
+                            :name('infix:='),
+                            $var
+                        );
+                        $var := PAST::Op.new( :pirop('setprop'), $var, 'readonly', 1);
+                        $var<constant_value_slot> := $var[0];
+                        $var<scopedecl> := 'constant';
                     }
                 }
                 $past[$i] := $var;
@@ -2065,6 +2072,9 @@ method declarator($/) {
     if $<variable_declarator> {
         $past := $<variable_declarator>.ast;
     }
+    elsif $<constant_declarator> {
+        $past := $<constant_declarator>.ast;
+    }
     elsif $<signature> {
         $past := $<signature>.ast;
         our $?BLOCK_OPEN;
@@ -2106,6 +2116,21 @@ method variable_declarator($/) {
 
     make $var;
 }
+
+
+method constant_declarator($/) {
+    our @?BLOCK;
+    my $past := PAST::Var.new(
+        :name(~$<identifier>),
+        :scope('lexical'),
+    );
+    $past<itype> := container_itype('Perl6Scalar');
+    $past<type>  := PAST::Op.new( :name('and'), :pasttype('call') );
+    $/.add_type(~$<identifier>);
+    @?BLOCK[0].symbol(~$<identifier>, :scope('lexical'));
+    make $past;
+}
+
 
 method variable($/, $key) {
     my $var;
@@ -2463,6 +2488,7 @@ method quote_expression($/, $key) {
             :blocktype('declaration'),
             :node( $/ )
         );
+        set_block_type($past, 'Regex');
     }
     elsif $key eq 'quote_p5regex' {
         $past := PAST::Block.new(
@@ -2471,6 +2497,7 @@ method quote_expression($/, $key) {
             :blocktype('declaration'),
             :node( $/ )
         );
+        set_block_type($past, 'Regex');
     }
     elsif $key eq 'quote_pir' {
         $past := PAST::Op.new( :inline( $<quote_pir> ), :node($/) );
@@ -2684,6 +2711,10 @@ method EXPR($/, $key) {
                     $rhs
                 )
             );
+        }
+        elsif $lhs<scopedecl> eq 'constant' {
+            $lhs<constant_value_slot>.push($rhs);
+            $past := $lhs;
         }
         else {
             # Just a normal assignment.
@@ -2901,7 +2932,8 @@ method type_declarator($/) {
 
     # Create subset type.
     my @name := Perl6::Compiler.parse_name($<name>);
-    $past := PAST::Op.new(
+    $past.blocktype('declaration');
+    $past.loadinit().push(PAST::Op.new(
         :node($/),
         :pasttype('bind'),
         PAST::Var.new(
@@ -2919,16 +2951,11 @@ method type_declarator($/) {
                     :name('Any'),
                     :scope('package')
                 ),
-            $past
+            PAST::Var.new( :name('block'), :scope('register') )
         )
-    );
+    ));
 
-    # Put this code in loadinit, so the type is created early enough,
-    # then this node results in an empty statement node.
-    our @?BLOCK;
-    @?BLOCK[0].loadinit().push($past);
-
-    make PAST::Stmts.new();
+    make $past;
 }
 
 
