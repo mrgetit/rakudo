@@ -17,6 +17,7 @@ our %?CLASSMAP;
 method TOP($/) {
     my $past := $<statement_block>.ast;
     $past.blocktype('declaration');
+    $past.hll('Perl6');
     declare_implicit_routine_vars($past);
     $past.lexical(0);
 
@@ -99,6 +100,7 @@ method statement_block($/, $key) {
     if $key eq 'close' {
         my $past := @?BLOCK.shift();
         $past.push($<statementlist>.ast);
+        $past.hll('Perl6');
         make $past;
     }
 }
