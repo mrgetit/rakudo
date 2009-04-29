@@ -78,6 +78,7 @@ method TOP($/) {
         $main.push( PAST::Stmts.new() );
     }
 
+    $main.hll('Perl6');
     make $main;
 }
 
